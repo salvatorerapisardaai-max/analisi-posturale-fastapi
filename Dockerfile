@@ -1,9 +1,14 @@
 FROM python:3.12-slim
 
+ENV LIBGL_ALWAYS_SOFTWARE=1
+ENV DISPLAY=:0
+
 RUN apt-get update && apt-get install -y \
     wget \
     libgl1 \
     libgles2 \
+    libegl1 \
+    libgbm1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
