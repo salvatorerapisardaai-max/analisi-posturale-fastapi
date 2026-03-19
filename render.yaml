@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: analisi-posturale
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: 1
+    aptPackages:
+      - libgl1-mesa-glx
+      - libegl1-mesa
+      - libglib2.0-0
+      - libsm6
+      - libxext6
+      - libxrender-dev
