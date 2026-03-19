@@ -1113,16 +1113,22 @@ async def demo_page():
 
                     let html = '';
 
-                    const annotated = data.annotated_images_b64?.Frontale ||
-                                     data.annotated_images_b64?.['Laterale destra'] ||
-                                     data.annotated_images_b64?.['Laterale sinistra'];
-                    if (annotated) {
-                        html += `
-                            <h3 style="text-align:center; margin:24px 0 16px;">Risultato elaborato</h3>
-                            <img src="data:image/jpeg;base64,${annotated}" style="max-width:100%; border-radius:12px; box-shadow:0 6px 16px rgba(0,0,0,0.12);">
-                        `;
+                    // Mostra TUTTE le immagini annotate disponibili
+                    if (data.annotated_images_b64) {
+                        html += '<h3 style="text-align:center; margin:32px 0 16px;">Immagini elaborate</h3>';
+                        
+                        Object.entries(data.annotated_images_b64).forEach(([view, base64]) => {
+                            if (base64) {
+                                html += `
+                                    <div style="margin:24px 0; text-align:center;">
+                                        <strong style="display:block; margin-bottom:8px; font-size:1.15rem;">${view}</strong>
+                                        <img src="data:image/jpeg;base64,${base64}" 
+                                             style="max-width:100%; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.15);">
+                                    </div>
+                                `;
+                            }
+                        });
                     }
-
                     if (data.analysis) {
                         Object.entries(data.analysis).forEach(([view, res]) => {
                             if (res.error) {
