@@ -905,45 +905,225 @@ async def demo_page():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Demo Analisi Posturale</title>
+        <title>Analisi Posturale Live</title>
         <style>
-            body { font-family: Arial; text-align: center; background: #f0f0f0; padding: 20px; }
-            h1 { color: #1a237e; }
-            button { background: #3f51b5; color: white; padding: 15px 30px; font-size: 18px; border: none; border-radius: 8px; cursor: pointer; }
-            #result { margin-top: 20px; font-size: 16px; white-space: pre-wrap; }
+            body {
+                font-family: system-ui, -apple-system, sans-serif;
+                background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+                margin: 0;
+                padding: 16px;
+                color: #1e293b;
+            }
+            .container {
+                max-width: 720px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 16px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                overflow: hidden;
+            }
+            header {
+                background: #1e40af;
+                color: white;
+                padding: 24px 16px;
+                text-align: center;
+            }
+            h1 {
+                margin: 0;
+                font-size: 1.9rem;
+            }
+            .subtitle {
+                margin: 8px 0 0;
+                opacity: 0.9;
+                font-size: 1.05rem;
+            }
+            .content {
+                padding: 24px;
+            }
+            button {
+                background: #3b82f6;
+                color: white;
+                border: none;
+                padding: 16px 40px;
+                font-size: 1.15rem;
+                border-radius: 12px;
+                cursor: pointer;
+                margin: 24px auto;
+                display: block;
+                font-weight: 600;
+                transition: all 0.2s;
+            }
+            button:hover {
+                background: #2563eb;
+                transform: translateY(-2px);
+            }
+            #preview img, #annotated img {
+                max-width: 100%;
+                border-radius: 12px;
+                margin: 16px 0;
+                box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+                display: block;
+            }
+            .result-section {
+                margin-top: 32px;
+            }
+            .card {
+                background: #f8fafc;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 16px;
+                border-left: 5px solid #94a3b8;
+            }
+            .card.normal   { border-left-color: #22c55e; background: #f0fdf4; }
+            .card.warning  { border-left-color: #f59e0b; background: #fffbeb; }
+            .card.danger   { border-left-color: #ef4444; background: #fef2f2; }
+            .metric-name {
+                font-weight: 600;
+                font-size: 1.05rem;
+                margin-bottom: 4px;
+            }
+            .metric-value {
+                font-size: 1.3rem;
+                font-weight: 700;
+                margin: 4px 0;
+            }
+            .metric-interp {
+                font-size: 0.95rem;
+                color: #475569;
+            }
+            .loading {
+                text-align: center;
+                padding: 60px 20px;
+                color: #64748b;
+                font-size: 1.1rem;
+                font-style: italic;
+            }
+            .error-msg {
+                background: #fee2e2;
+                color: #991b1b;
+                padding: 16px;
+                border-radius: 12px;
+                margin: 16px 0;
+                text-align: center;
+            }
         </style>
     </head>
     <body>
-        <h1>Prova l'App Live</h1>
-        <input type="file" id="camera" accept="image/*" capture="camera" style="display:none;">
-        <button onclick="document.getElementById('camera').click()">Scatta foto</button>
-        <div id="preview"></div>
-        <div id="result"></div>
+        <div class="container">
+            <header>
+                <h1>Analisi Posturale Live</h1>
+                <div class="subtitle">Scatta una foto → risultati immediati</div>
+            </header>
+
+            <div class="content">
+                <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none;">
+                <button onclick="document.getElementById('fileInput').click()">
+                    Scatta foto postura
+                </button>
+
+                <div id="preview"></div>
+                <div id="result" class="loading">Pronto per scattare una foto</div>
+            </div>
+        </div>
 
         <script>
-            const input = document.getElementById('camera');
-            input.onchange = async () => {
-                const file = input.files[0];
+            const fileInput = document.getElementById('fileInput');
+            const previewDiv = document.getElementById('preview');
+            const resultDiv = document.getElementById('result');
+
+            fileInput.addEventListener('change', async () => {
+                const file = fileInput.files[0];
                 if (!file) return;
 
+                // Preview originale
                 const reader = new FileReader();
-                reader.onload = e => document.getElementById('preview').innerHTML = `<img src="${e.target.result}" style="max-width:90%;">`;
+                reader.onload = e => {
+                    previewDiv.innerHTML = `<img src="${e.target.result}" alt="Foto scattata">`;
+                };
                 reader.readAsDataURL(file);
 
-                const form = new FormData();
-                form.append('frontale', file);
-                form.append('laterale_destra', new Blob([]), 'empty.jpg');
-                form.append('laterale_sinistra', new Blob([]), 'empty.jpg');
-                form.append('height_cm', '170');
+                const formData = new FormData();
+                formData.append('frontale', file);
+                formData.append('laterale_destra', new Blob([]), 'empty.jpg');
+                formData.append('laterale_sinistra', new Blob([]), 'empty.jpg');
+                formData.append('height_cm', '170');  // valore demo – puoi aggiungere un input
+
+                resultDiv.innerHTML = '<div class="loading">Analisi in corso... (10–40 secondi)</div>';
 
                 try {
-                    const res = await fetch('/analyze/static', {method: 'POST', body: form});
+                    const res = await fetch('/analyze/static', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!res.ok) throw new Error(`Errore server: ${res.status}`);
+
                     const data = await res.json();
-                    document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-                } catch (e) {
-                    document.getElementById('result').innerHTML = 'Errore: ' + e;
+
+                    let html = '';
+
+                    // Immagine annotata (priorità alla frontale se esiste)
+                    const annotated = data.annotated_images_b64?.Frontale || 
+                                     data.annotated_images_b64?.['Laterale destra'] || 
+                                     data.annotated_images_b64?.['Laterale sinistra'];
+
+                    if (annotated) {
+                        html += `
+                            <h3 style="margin-top:24px; text-align:center;">Risultato elaborato</h3>
+                            <div id="annotated"><img src="data:image/jpeg;base64,${annotated}" alt="Immagine con analisi"></div>
+                        `;
+                    }
+
+                    // Risultati per vista
+                    if (data.analysis) {
+                        Object.entries(data.analysis).forEach(([view, res]) => {
+                            if (res.error) {
+                                html += `<div class="error-msg">Errore vista ${view}: ${res.error}</div>`;
+                                return;
+                            }
+
+                            html += `<div class="result-section"><h3>Vista: ${view}</h3>`;
+
+                            if (res.metrics && res.interpretation) {
+                                Object.entries(res.metrics).forEach(([key, val]) => {
+                                    if (val === null) return;
+                                    const interp = res.interpretation[key];
+                                    if (!interp) return;
+
+                                    let cardClass = 'normal';
+                                    if (interp.status === 'anomalia') {
+                                        cardClass = interp.in_range ? 'warning' : 'danger';
+                                    }
+
+                                    html += `
+                                        <div class="card ${cardClass}">
+                                            <div class="metric-name">${interp.label}</div>
+                                            <div class="metric-value">${val} ${interp.unit}</div>
+                                            <div class="metric-interp">${interp.interpretation}</div>
+                                            <div style="margin-top:8px; font-size:0.9rem; color:#64748b;">
+                                                Range normale: ${interp.normal_range}
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                            } else {
+                                html += '<p style="color:#64748b;">Nessuna metrica disponibile per questa vista.</p>';
+                            }
+
+                            html += '</div>';
+                        });
+                    }
+
+                    if (!html) {
+                        html = '<div class="error-msg">Nessun risultato valido ricevuto</div>';
+                    }
+
+                    resultDiv.innerHTML = html;
+
+                } catch (err) {
+                    resultDiv.innerHTML = `<div class="error-msg">Errore durante l'elaborazione: ${err.message}</div>`;
                 }
-            };
+            });
         </script>
     </body>
     </html>
