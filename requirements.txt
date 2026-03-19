@@ -1,9 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-multipart
 mediapipe
 opencv-python-headless
 numpy
 pillow
 reportlab
-wget
