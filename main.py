@@ -896,7 +896,6 @@ async def report_pdf(payload: dict):
     except Exception as exc:
         raise HTTPException(500, str(exc))
 
-
 @app.get("/demo", response_class=HTMLResponse)
 async def demo_page():
     return """
@@ -932,7 +931,7 @@ async def demo_page():
             .subtitle { margin: 8px 0 0; opacity: 0.9; font-size: 1.1rem; }
             .content { padding: 24px; }
             .photo-section {
-                margin: 16px 0;
+                margin: 20px 0;
                 text-align: center;
             }
             .photo-box {
@@ -941,8 +940,27 @@ async def demo_page():
                 padding: 16px;
                 margin: 12px 0;
                 background: #f8fafc;
+                min-height: 140px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
             }
-            .photo-box.has-photo { border-color: #22c55e; background: #f0fdf4; }
+            .photo-box.has-photo {
+                border-color: #22c55e;
+                background: #f0fdf4;
+            }
+            .photo-box img {
+                max-width: 100%;
+                max-height: 260px;
+                width: auto;
+                height: auto;
+                object-fit: contain;
+                border-radius: 10px;
+                margin-top: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                display: block;
+            }
             button {
                 background: #3b82f6;
                 color: white;
@@ -959,18 +977,12 @@ async def demo_page():
                 background: #16a34a;
                 font-size: 1.2rem;
                 padding: 16px 48px;
-                margin: 32px auto;
+                margin: 32px auto 16px;
                 display: block;
             }
             #analyze-btn:hover { background: #15803d; }
-            #preview-front, #preview-right, #preview-left {
-                max-width: 100%;
-                border-radius: 12px;
-                margin-top: 12px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            }
-            .result { margin-top: 32px; }
-            .loading { text-align: center; padding: 60px; color: #64748b; font-style: italic; }
+            #result { margin-top: 32px; }
+            .loading { text-align: center; padding: 60px; color: #64748b; font-style: italic; font-size: 1.1rem; }
             .error-msg {
                 background: #fee2e2;
                 color: #991b1b;
@@ -1029,17 +1041,17 @@ async def demo_page():
                     </div>
                 </div>
 
-                <button id="analyze-btn" onclick="analyzePhotos()">Analizza le foto</button>
+                <button id="analyze-btn" onclick="analyzePhotos()">Analizza le foto caricate</button>
 
-                <div id="result" class="loading">Pronto quando hai scattato le foto</div>
+                <div id="result" class="loading">Salvatore Rapisarda</div>
             </div>
         </div>
 
         <script>
             const inputs = {
-                front:  document.getElementById('frontInput'),
-                right:  document.getElementById('rightInput'),
-                left:   document.getElementById('leftInput')
+                front: document.getElementById('frontInput'),
+                right: document.getElementById('rightInput'),
+                left:  document.getElementById('leftInput')
             };
             const previews = {
                 front: document.getElementById('preview-front'),
@@ -1052,7 +1064,6 @@ async def demo_page():
                 left:  document.getElementById('left-box')
             };
 
-            // Anteprima quando si seleziona/scatta
             Object.keys(inputs).forEach(key => {
                 inputs[key].addEventListener('change', e => {
                     const file = e.target.files[0];
@@ -1076,12 +1087,9 @@ async def demo_page():
                 ['front', 'right', 'left'].forEach(key => {
                     const file = inputs[key].files[0];
                     if (file) {
-                        formData.append(
-                            key === 'front' ? 'frontale' :
-                            key === 'right' ? 'laterale_destra' :
-                            'laterale_sinistra',
-                            file
-                        );
+                        const fieldName = key === 'front' ? 'frontale' :
+                                         key === 'right' ? 'laterale_destra' : 'laterale_sinistra';
+                        formData.append(fieldName, file);
                         hasAnyPhoto = true;
                     }
                 });
@@ -1091,7 +1099,6 @@ async def demo_page():
                     return;
                 }
 
-                // Altezza demo (puoi aggiungere un input dopo)
                 formData.append('height_cm', '170');
 
                 try {
@@ -1106,7 +1113,6 @@ async def demo_page():
 
                     let html = '';
 
-                    // Mostra immagine annotata (priorità frontale, poi altre)
                     const annotated = data.annotated_images_b64?.Frontale ||
                                      data.annotated_images_b64?.['Laterale destra'] ||
                                      data.annotated_images_b64?.['Laterale sinistra'];
@@ -1117,7 +1123,6 @@ async def demo_page():
                         `;
                     }
 
-                    // Risultati per vista
                     if (data.analysis) {
                         Object.entries(data.analysis).forEach(([view, res]) => {
                             if (res.error) {
