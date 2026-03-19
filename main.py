@@ -905,7 +905,7 @@ async def demo_page():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Analisi Posturale Live</title>
+        <title>PosturalApp</title>
         <style>
             body {
                 font-family: system-ui, -apple-system, sans-serif;
@@ -928,44 +928,56 @@ async def demo_page():
                 padding: 24px 16px;
                 text-align: center;
             }
-            h1 {
-                margin: 0;
-                font-size: 1.9rem;
+            h1 { margin: 0; font-size: 2rem; }
+            .subtitle { margin: 8px 0 0; opacity: 0.9; font-size: 1.1rem; }
+            .content { padding: 24px; }
+            .photo-section {
+                margin: 16px 0;
+                text-align: center;
             }
-            .subtitle {
-                margin: 8px 0 0;
-                opacity: 0.9;
-                font-size: 1.05rem;
+            .photo-box {
+                border: 2px dashed #94a3b8;
+                border-radius: 12px;
+                padding: 16px;
+                margin: 12px 0;
+                background: #f8fafc;
             }
-            .content {
-                padding: 24px;
-            }
+            .photo-box.has-photo { border-color: #22c55e; background: #f0fdf4; }
             button {
                 background: #3b82f6;
                 color: white;
                 border: none;
-                padding: 16px 40px;
-                font-size: 1.15rem;
+                padding: 14px 32px;
+                font-size: 1.05rem;
                 border-radius: 12px;
                 cursor: pointer;
-                margin: 24px auto;
-                display: block;
+                margin: 12px;
                 font-weight: 600;
-                transition: all 0.2s;
             }
-            button:hover {
-                background: #2563eb;
-                transform: translateY(-2px);
+            button:hover { background: #2563eb; }
+            #analyze-btn {
+                background: #16a34a;
+                font-size: 1.2rem;
+                padding: 16px 48px;
+                margin: 32px auto;
+                display: block;
             }
-            #preview img, #annotated img {
+            #analyze-btn:hover { background: #15803d; }
+            #preview-front, #preview-right, #preview-left {
                 max-width: 100%;
                 border-radius: 12px;
-                margin: 16px 0;
-                box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-                display: block;
+                margin-top: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             }
-            .result-section {
-                margin-top: 32px;
+            .result { margin-top: 32px; }
+            .loading { text-align: center; padding: 60px; color: #64748b; font-style: italic; }
+            .error-msg {
+                background: #fee2e2;
+                color: #991b1b;
+                padding: 16px;
+                border-radius: 12px;
+                margin: 16px 0;
+                text-align: center;
             }
             .card {
                 background: #f8fafc;
@@ -977,78 +989,110 @@ async def demo_page():
             .card.normal   { border-left-color: #22c55e; background: #f0fdf4; }
             .card.warning  { border-left-color: #f59e0b; background: #fffbeb; }
             .card.danger   { border-left-color: #ef4444; background: #fef2f2; }
-            .metric-name {
-                font-weight: 600;
-                font-size: 1.05rem;
-                margin-bottom: 4px;
-            }
-            .metric-value {
-                font-size: 1.3rem;
-                font-weight: 700;
-                margin: 4px 0;
-            }
-            .metric-interp {
-                font-size: 0.95rem;
-                color: #475569;
-            }
-            .loading {
-                text-align: center;
-                padding: 60px 20px;
-                color: #64748b;
-                font-size: 1.1rem;
-                font-style: italic;
-            }
-            .error-msg {
-                background: #fee2e2;
-                color: #991b1b;
-                padding: 16px;
-                border-radius: 12px;
-                margin: 16px 0;
-                text-align: center;
-            }
+            .metric-name   { font-weight: 600; font-size: 1.05rem; margin-bottom: 4px; }
+            .metric-value  { font-size: 1.3rem; font-weight: 700; margin: 4px 0; }
+            .metric-interp { font-size: 0.95rem; color: #475569; }
         </style>
     </head>
     <body>
         <div class="container">
             <header>
-                <h1>Analisi Posturale Live</h1>
-                <div class="subtitle">Scatta una foto → risultati immediati</div>
+                <h1>PosturalApp</h1>
+                <div class="subtitle">analisi posturale live</div>
             </header>
 
             <div class="content">
-                <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none;">
-                <button onclick="document.getElementById('fileInput').click()">
-                    Scatta foto postura
-                </button>
+                <div class="photo-section">
+                    <h3>Foto Frontale</h3>
+                    <div class="photo-box" id="front-box">
+                        <button onclick="document.getElementById('frontInput').click()">Scatta / Seleziona</button>
+                        <input type="file" id="frontInput" accept="image/*" capture="environment" style="display:none;">
+                        <div id="preview-front"></div>
+                    </div>
+                </div>
 
-                <div id="preview"></div>
-                <div id="result" class="loading">Pronto per scattare una foto</div>
+                <div class="photo-section">
+                    <h3>Laterale Destra</h3>
+                    <div class="photo-box" id="right-box">
+                        <button onclick="document.getElementById('rightInput').click()">Scatta / Seleziona</button>
+                        <input type="file" id="rightInput" accept="image/*" capture="environment" style="display:none;">
+                        <div id="preview-right"></div>
+                    </div>
+                </div>
+
+                <div class="photo-section">
+                    <h3>Laterale Sinistra</h3>
+                    <div class="photo-box" id="left-box">
+                        <button onclick="document.getElementById('leftInput').click()">Scatta / Seleziona</button>
+                        <input type="file" id="leftInput" accept="image/*" capture="environment" style="display:none;">
+                        <div id="preview-left"></div>
+                    </div>
+                </div>
+
+                <button id="analyze-btn" onclick="analyzePhotos()">Analizza le foto</button>
+
+                <div id="result" class="loading">Pronto quando hai scattato le foto</div>
             </div>
         </div>
 
         <script>
-            const fileInput = document.getElementById('fileInput');
-            const previewDiv = document.getElementById('preview');
-            const resultDiv = document.getElementById('result');
+            const inputs = {
+                front:  document.getElementById('frontInput'),
+                right:  document.getElementById('rightInput'),
+                left:   document.getElementById('leftInput')
+            };
+            const previews = {
+                front: document.getElementById('preview-front'),
+                right: document.getElementById('preview-right'),
+                left:  document.getElementById('preview-left')
+            };
+            const boxes = {
+                front: document.getElementById('front-box'),
+                right: document.getElementById('right-box'),
+                left:  document.getElementById('left-box')
+            };
 
-            fileInput.addEventListener('change', async () => {
-                const file = fileInput.files[0];
-                if (!file) return;
+            // Anteprima quando si seleziona/scatta
+            Object.keys(inputs).forEach(key => {
+                inputs[key].addEventListener('change', e => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                        previews[key].innerHTML = `<img src="${ev.target.result}" alt="${key}">`;
+                        boxes[key].classList.add('has-photo');
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
 
-                // Preview originale
-                const reader = new FileReader();
-                reader.onload = e => {
-                    previewDiv.innerHTML = `<img src="${e.target.result}" alt="Foto scattata">`;
-                };
-                reader.readAsDataURL(file);
+            async function analyzePhotos() {
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = '<div class="loading">Analisi in corso... (20–60 secondi)</div>';
 
                 const formData = new FormData();
-                formData.append('frontale', file);
-                formData.append('laterale_destra', new Blob([]), 'empty.jpg');
-                formData.append('laterale_sinistra', new Blob([]), 'empty.jpg');
-                formData.append('height_cm', '170');  // valore demo – puoi aggiungere un input
+                let hasAnyPhoto = false;
 
-                resultDiv.innerHTML = '<div class="loading">Analisi in corso... (10–40 secondi)</div>';
+                ['front', 'right', 'left'].forEach(key => {
+                    const file = inputs[key].files[0];
+                    if (file) {
+                        formData.append(
+                            key === 'front' ? 'frontale' :
+                            key === 'right' ? 'laterale_destra' :
+                            'laterale_sinistra',
+                            file
+                        );
+                        hasAnyPhoto = true;
+                    }
+                });
+
+                if (!hasAnyPhoto) {
+                    resultDiv.innerHTML = '<div class="error-msg">Scatta almeno una foto</div>';
+                    return;
+                }
+
+                // Altezza demo (puoi aggiungere un input dopo)
+                formData.append('height_cm', '170');
 
                 try {
                     const res = await fetch('/analyze/static', {
@@ -1062,15 +1106,14 @@ async def demo_page():
 
                     let html = '';
 
-                    // Immagine annotata (priorità alla frontale se esiste)
-                    const annotated = data.annotated_images_b64?.Frontale || 
-                                     data.annotated_images_b64?.['Laterale destra'] || 
+                    // Mostra immagine annotata (priorità frontale, poi altre)
+                    const annotated = data.annotated_images_b64?.Frontale ||
+                                     data.annotated_images_b64?.['Laterale destra'] ||
                                      data.annotated_images_b64?.['Laterale sinistra'];
-
                     if (annotated) {
                         html += `
-                            <h3 style="margin-top:24px; text-align:center;">Risultato elaborato</h3>
-                            <div id="annotated"><img src="data:image/jpeg;base64,${annotated}" alt="Immagine con analisi"></div>
+                            <h3 style="text-align:center; margin:24px 0 16px;">Risultato elaborato</h3>
+                            <img src="data:image/jpeg;base64,${annotated}" style="max-width:100%; border-radius:12px; box-shadow:0 6px 16px rgba(0,0,0,0.12);">
                         `;
                     }
 
@@ -1106,24 +1149,20 @@ async def demo_page():
                                         </div>
                                     `;
                                 });
-                            } else {
-                                html += '<p style="color:#64748b;">Nessuna metrica disponibile per questa vista.</p>';
                             }
 
                             html += '</div>';
                         });
                     }
 
-                    if (!html) {
-                        html = '<div class="error-msg">Nessun risultato valido ricevuto</div>';
-                    }
+                    if (!html) html = '<div class="error-msg">Nessun risultato valido</div>';
 
                     resultDiv.innerHTML = html;
 
                 } catch (err) {
-                    resultDiv.innerHTML = `<div class="error-msg">Errore durante l'elaborazione: ${err.message}</div>`;
+                    resultDiv.innerHTML = `<div class="error-msg">Errore: ${err.message}</div>`;
                 }
-            });
+            }
         </script>
     </body>
     </html>
