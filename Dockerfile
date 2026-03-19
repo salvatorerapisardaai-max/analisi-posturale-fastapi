@@ -3,6 +3,7 @@ FROM python:3.12-slim
 RUN apt-get update && apt-get install -y \
     wget \
     libgl1 \
+    libgles2 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
