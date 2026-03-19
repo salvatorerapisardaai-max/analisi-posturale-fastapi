@@ -416,25 +416,25 @@ NORMAL_RANGES = {
         'vista': 'Frontale'
     },
     'ang_est_anca_dx': {
-        'label': 'Flessione/estensione anca DX',
+        'label': 'Estensione anca DX',
         'unit': '°', 'min': -5.0, 'max': 5.0,
         'pos_label': 'flessione anca', 'neg_label': 'estensione anca',
         'vista': 'Laterale destra'
     },
     'ang_est_anca_sx': {
-        'label': 'Flessione/estensione anca SX',
+        'label': 'Estensione anca SX',
         'unit': '°', 'min': -5.0, 'max': 5.0,
         'pos_label': 'flessione anca', 'neg_label': 'estensione anca',
         'vista': 'Laterale sinistra'
     },
     'ang_est_gin_dx': {
-        'label': 'Flessione/estensione ginocchio DX',
+        'label': 'Estensione ginocchio DX',
         'unit': '°', 'min': -5.0, 'max': 5.0,
         'pos_label': 'flessione ginocchio', 'neg_label': 'estensione ginocchio (recurvatum)',
         'vista': 'Laterale destra'
     },
     'ang_est_gin_sx': {
-        'label': 'Flessione/estensione ginocchio SX',
+        'label': 'Estensione ginocchio SX',
         'unit': '°', 'min': -5.0, 'max': 5.0,
         'pos_label': 'flessione ginocchio', 'neg_label': 'estensione ginocchio (recurvatum)',
         'vista': 'Laterale sinistra'
